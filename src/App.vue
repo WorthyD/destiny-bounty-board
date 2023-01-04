@@ -1,23 +1,50 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from './components/HelloWorld.vue'
+import { ref } from 'vue';
+import { RouterLink, RouterView } from 'vue-router';
+import HelloWorld from './components/HelloWorld.vue';
+import { useManifest } from '@/composable/useManifest';
+import { useManifestStore } from '@/stores/manifest';
+import { useAuthentication } from '@/composable/useAuthentication';
+import LoginView from './views/LoginView.vue';
+const loading = ref(true);
+const isUserLoggedIn = ref(false);
+const { loadManifest } = useManifest();
+const { updateManifest } = useManifestStore();
+const { isLoggedIn } = useAuthentication();
+
+loadManifest().then((manifest) => {
+  console.log('MANIFEST', manifest);
+  updateManifest(manifest.data);
+  // TODO: Show hide loading indicator
+  loading.value = false;
+});
+
+isLoggedIn().then((result) => {
+  isUserLoggedIn.value = result;
+});
 </script>
 
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
+  <div v-if="loading === false">
+    <header>
+      <div v-if="isUserLoggedIn === true">
+        <div class="wrapper">
+          <HelloWorld msg="You did it!" />
 
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-      </nav>
-    </div>
-  </header>
-
-  <RouterView />
+          <nav>
+            <RouterLink to="/">Home</RouterLink>
+            <RouterLink to="/about">About</RouterLink>
+            <RouterLink to="/login">Login</RouterLink>
+          </nav>
+        </div>
+      </div>
+      <div v-else>
+        <LoginView />
+      </div>
+    </header>
+    <RouterView />
+  </div>
+  <div v-else>Loading</div>
 </template>
 
 <style scoped>
